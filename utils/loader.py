@@ -1,3 +1,4 @@
+# utils/loader.py
 # Load historic stock data from Alpaca via PyAlpacaAPI
 from tracemalloc import start
 
@@ -25,11 +26,11 @@ def fetch_alpaca_data(symbol, interval):
 
     # Interval mapping for Alpaca API
     interval = interval.lower().strip()
-    if interval in ("day", "daily", "1d"):
+    if interval == "daily":
         timeframe = "1d"
-    elif interval in ("week", "weekly", "1w"):
+    elif interval == "weekly":
         timeframe = "1w"
-    elif interval in ("month", "monthly", "1m"):
+    elif interval == "monthly":
         timeframe = "1M"
     else:
         raise ValueError(f"Unsupported interval: '{interval}'. Use 'day', 'week', or 'month'.")
