@@ -3,6 +3,15 @@
 import pandas as pd
 import numpy as np
 
+def calculate_moving_averages(df):
+    """Calculates Simple Moving Averages (SMA).
+    """
+    df = df.copy()
+    df['SMA_20'] = df['close'].rolling(window=20).mean()
+    df['SMA_50'] = df['close'].rolling(window=50).mean()
+    df['SMA_150'] = df['close'].rolling(window=150).mean()
+    return df
+
 def calculate_daily_returns(df):
     """
     Calculates daily percentage change for close prices
@@ -60,7 +69,7 @@ def calculate_streak_probability(df, streak_length, direction):
 
     # Check streak_length input
     if not isinstance(streak_length, int) or streak_length < 1:
-        raise ValueError("streak_length must be a positive integer")
+        raise ValueError("streak_length must be a positive integer >= 1")
 
     df_daily = calculate_daily_returns(df)
 
@@ -69,13 +78,13 @@ def calculate_streak_probability(df, streak_length, direction):
 
     # Filter according to direction
     if direction == "positive":
-        is_streak_day = df_daily[df_daily['daily_return'] >= 0]
+        condition = df_daily['daily_return'] >= 0
     else:
-        is_streak_day = df_daily[df_daily['daily_return'] < 0]
+        condition = df_daily['daily_return'] < 0
 
     # Calculate streaks
     streak = (
-        is_streak_day.astype(int)
+        condition.astype(int)
         .rolling(window=streak_length, min_periods=streak_length)
         .sum() == streak_length
     )
