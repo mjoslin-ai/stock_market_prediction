@@ -35,7 +35,7 @@ st.divider()
 
 # --- DATA FETCHING & RENDERING ---
 with st.spinner(f"Fetching {interval} data for {symbol} from Alpaca..."):
-    df = fetch_alpaca_data(symbol, interval=interval)
+    df, _, _ = fetch_alpaca_data(symbol, interval=interval)
 
 if df.empty:
     st.error(f"Could not load data for {symbol}. Verify the ticker symbol, check your Alpaca API credentials in `secrets.toml`, or check rate limits.")

@@ -4,7 +4,8 @@ import pandas as pd
 import numpy as np
 
 def calculate_moving_averages(df):
-    """Calculates Simple Moving Averages (SMA).
+    """
+    Calculates Simple Moving Averages (SMA).
     """
     df = df.copy()
     df['SMA_20'] = df['close'].rolling(window=20).mean()

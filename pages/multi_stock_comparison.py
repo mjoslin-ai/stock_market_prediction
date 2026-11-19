@@ -39,7 +39,7 @@ else:
     with st.spinner("Fetching historical data for selected stocks from Alpaca..."):
         for ticker in selected_tickers:
             # Fetch data using your Alpaca loader utility[cite: 1, 3]
-            df = fetch_alpaca_data(ticker, interval=interval)  #[cite: 1, 3]
+            df, _, _ = fetch_alpaca_data(ticker, interval=interval)  #[cite: 1, 3]
             if not df.empty and 'close' in df.columns:
                 price_data[ticker] = df['close']
 

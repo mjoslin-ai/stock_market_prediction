@@ -24,7 +24,7 @@ st.divider()
 
 # --- FETCH DATA ---
 with st.spinner(f"Fetching {interval} data for {symbol}..."):
-    df = fetch_alpaca_data(symbol, interval=interval)
+    df, _, _ = fetch_alpaca_data(symbol, interval=interval)
 
 if df.empty:
     st.error(f"Could not load data for {symbol}. Check API credentials or ticker symbol.")

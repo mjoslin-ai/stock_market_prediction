@@ -1,16 +1,18 @@
 # utils/loader.py
 # Load historic stock data from Alpaca via PyAlpacaAPI
-from tracemalloc import start
+
+#from tracemalloc import start
 
 import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta
 from py_alpaca_api import PyAlpacaAPI
+import yfinance as yf
 
 @st.cache_data(ttl=3600) # Cache the data for 1 hour
 def fetch_alpaca_data(symbol, interval):
     """
-    Pull daily or hourly data from Alpaca using PyAlpacaAPI.
+    Pull stock price, volume, listed exchange, and market cap data from Alpaca using PyAlpacaAPI.
     Supported intervals: "day", "week", "month"
     Lookback: 5 years for all intervals.
     """
@@ -43,6 +45,7 @@ def fetch_alpaca_data(symbol, interval):
     end_str = end_date.strftime("%Y-%m-%d")
 
     # Use the free IEX feed
+    # Plot of bars is paid version
     df = api.stock.history.get_stock_data(
         symbol=symbol.upper(),
         start=start_str,
@@ -65,4 +68,23 @@ def fetch_alpaca_data(symbol, interval):
     for col in keep_cols:
         df[col] = pd.to_numeric(df[col], errors="coerce")
 
-    return df
+    # Exchange listing
+    # from Alpaca API
+    exchange = None
+    try:
+        asset = api.stock.assets.get(symbol.upper())
+        exchange = asset.exchange
+    except Exception as e:
+        st.warning(f"Could not retrieve exchange for {symbol}: {e}")
+
+    # Market cap
+    # from Yahoo Finance
+    market_cap = None
+    try:
+        ticker = yf.Ticker(symbol.upper())
+        market_cap = ticker.fast_info.get("market_cap")
+    except Exception as e:
+        st.warning(f"Could not retrieve market cap for {symbol}: {e}")
+
+    return df, exchange, market_cap
+    
