@@ -17,7 +17,7 @@ render_sidebar("Market Trend")
 
 st.title("Stock Market Price Analytics")
 st.write(
-    "Daily, weekly, and monthly prices with moving averages (5-year lookback). "
+    "Daily, weekly, and monthly closing prices with moving averages (5-year lookback). "
     "Data is sourced from [Alpaca](https://alpaca.markets/) paper trading API "
     "(split adjusted) and market cap information from "
     "[Yahoo Finance](https://pypi.org/project/yfinance/). "
