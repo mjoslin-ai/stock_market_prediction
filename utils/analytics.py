@@ -3,99 +3,90 @@
 import pandas as pd
 import numpy as np
 
+
 def calculate_moving_averages(df):
-    """
-    Calculates Simple Moving Averages (SMA).
-    """
+    """Calculates Simple and Exponential Moving Averages."""
     df = df.copy()
+    
+    # Simple Moving Averages
     df['SMA_20'] = df['close'].rolling(window=20).mean()
     df['SMA_50'] = df['close'].rolling(window=50).mean()
     df['SMA_150'] = df['close'].rolling(window=150).mean()
+    
     return df
+
 
 def calculate_daily_returns(df):
-    """
-    Calculates daily percentage change for close prices
-    Requires df to be sorted chronologically
-    Returns a boolean column indicating if the next day's return is positive
+    """Calculates daily percentage change for close prices.
+    Requires df to be sorted chronologically.
     """
     df = df.copy()
-    # Compute (today’s close − previous day’s close) / previous day’s close * 100
-    df['daily_return'] = df['close'].pct_change() * 100
-    # Shift close column so that each row now contains the closing price of the next trading day
-    df['next_day_close'] = df['close'].shift(-1)
-    # Next day return percentage change
-    df['next_day_return'] = (df['next_day_close'] / df['close'] - 1) * 100
-    
+    df["daily_return"] = df["close"].pct_change() * 100
+    df["next_day_close"] = df["close"].shift(-1)
+    df["next_day_return"] = (df["next_day_close"] / df["close"] - 1) * 100
     return df
 
-def calculate_threshold_probability(df, threshold, direction):
-    """
-    Calculates historical probability that the next day closes positive or negative based on threshold of daily returns.
-    """
+
+def threshold_success(df, threshold, direction):
     direction = direction.lower().strip()
     if direction not in {"positive", "negative"}:
         raise ValueError("direction must be 'positive' or 'negative'")
-    
+
     df_daily = calculate_daily_returns(df)
+    df_daily = df_daily.dropna(subset=["daily_return", "next_day_return"])
 
-    # Drop rows where we cannot compute either today's or next day's return
-    df_daily = df_daily.dropna(subset=['daily_return', 'next_day_return'])
-
-    # Filter according to direction
     if direction == "positive":
-        subset = df_daily[df_daily['daily_return'] >= threshold]
-        # Probability that next day is also positive
-        success = subset['next_day_return'] > 0
-    else:  
-        subset = df_daily[df_daily['daily_return'] <= threshold]
-        # Probability that next day is also negative
-        success = subset['next_day_return'] < 0
+        subset = df_daily[df_daily["daily_return"] >= threshold]
+        success = subset["next_day_return"] > 0
+    else:
+        subset = df_daily[df_daily["daily_return"] <= threshold]
+        success = subset["next_day_return"] < 0
+    return success
 
-    n = len(subset)
+
+def calculate_threshold_probability(df, threshold, direction):
+    """Historical probability that the next close continues in the same direction
+    after today's move clears a threshold.
+
+    Positive: P(next close up | today's return >= threshold).
+    Negative: P(next close down | today's return <= threshold).
+    """
+    success = threshold_success(df, threshold, direction)
+    n = len(success)
     if n == 0:
         return 0.0
+    return round(float(success.sum() / n * 100), 2)
 
-    probability = (success.sum() / n) * 100
-    return round(probability, 2)
 
-def calculate_streak_probability(df, streak_length, direction):
-    """
-    Calculates the probability of a streak of consecutive positive or negative days.
-    """
-    # Check direction input
+def streak_success(df, streak_length, direction):
     direction = direction.lower().strip()
     if direction not in {"positive", "negative"}:
         raise ValueError("direction must be 'positive' or 'negative'")
-
-    # Check streak_length input
     if not isinstance(streak_length, int) or streak_length < 1:
         raise ValueError("streak_length must be a positive integer >= 1")
 
     df_daily = calculate_daily_returns(df)
+    df_daily = df_daily.dropna()
 
-    # Drop rows where either todays or next days return is missing
-    df_daily = df_daily.dropna(subset=['daily_return', 'next_day_return'])
-
-    # Filter according to direction
     if direction == "positive":
-        condition = df_daily['daily_return'] >= 0
+        condition = df_daily["daily_return"] >= 0
     else:
-        condition = df_daily['daily_return'] < 0
+        condition = df_daily["daily_return"] < 0
 
-    # Calculate streaks
     streak = (
-        condition.astype(int)
-        .rolling(window=streak_length, min_periods=streak_length)
-        .sum() == streak_length
+        condition.astype(int).rolling(window=streak_length, min_periods=streak_length).sum()
+        == streak_length
     )
-
     subset = df_daily.loc[streak]
-    n = len(subset)
+    return subset["next_day_return"] > 0
+
+
+def calculate_streak_probability(df, streak_length, direction):
+    """Probability the next close is positive after streak_length
+    """
+    success = streak_success(df, streak_length, direction)
+    n = len(success)
     if n == 0:
         return 0.0
+    return round(float(success.sum() / n * 100), 2)
 
-    # Return probability of next day being positive or negative
-    success = subset["next_day_return"] > 0
-    probability = (success.sum() / n) * 100
-    return round(probability, 2)
