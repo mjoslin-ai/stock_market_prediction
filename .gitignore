@@ -1,6 +1,5 @@
-.streamlit
+.streamlit/secrets.toml
 .venv
 .vscode
 docs
 __pycache__/
-test_app.py
