@@ -138,7 +138,7 @@ if st.button("Compare", type="primary"):
     })
     st.dataframe(summary, hide_index=True, use_container_width=True)
 
-    # Correlation (lower triangle only)
+    # Correlation 
     st.subheader("Return Correlation")
     st.caption(
         "Pearson correlation of lookback-period returns. "

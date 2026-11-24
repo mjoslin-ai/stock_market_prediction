@@ -38,9 +38,8 @@ for key, val in defaults.items():
     if key not in st.session_state:
         st.session_state[key] = val
 
-# ---------------------------------------------------------------------------
-# Always-visible inputs
-# ---------------------------------------------------------------------------
+
+# Initial visible inputs
 col_input, col_btn = st.columns([3, 1])
 symbol_input = col_input.text_input(
     "Symbol",
@@ -99,7 +98,7 @@ range_label = controls[2].selectbox(
     index=list(RANGES.keys()).index(st.session_state.chart_range),
 )
 
-# Re-fetch if interval changed
+# Re acquire data if interval changed
 new_interval = interval_label.lower()
 if new_interval != st.session_state.chart_interval:
     with st.spinner(f"Reloading {symbol} ({new_interval})…"):
@@ -116,13 +115,13 @@ if new_interval != st.session_state.chart_interval:
 
 st.session_state.chart_range = range_label
 
-# Moving-average toggles (SMA 20 / 50 / 150)
+# Moving average toggles
 ma_cols = st.columns(3)
 show_sma20 = ma_cols[0].checkbox("SMA 20", value=False)
 show_sma50 = ma_cols[1].checkbox("SMA 50", value=False)
 show_sma150 = ma_cols[2].checkbox("SMA 150", value=False)
 
-# Apply range filter
+# Range filter
 days = RANGES[range_label]
 plot_df = df.iloc[-days:] if len(df) > days else df.copy()
 
